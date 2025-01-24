@@ -1,7 +1,10 @@
 library(tidyverse)
 library(gt)
 library(gtsummary)
-pa_df = readRDS(here::here("data", "accelerometry", "summarized", "pa_df_subject_level.rds"))
+pa_df = readRDS(here::here("data", "accelerometry", "summarized", "pa_df_subject_level.rds")) %>%
+  select(-num_valid_days)
+cadence_df = readRDS(here::here("data", "accelerometry", "summarized", "cadence_df_subject_level.rds")) %>%
+  select(-num_valid_days)
 covariates = readRDS(here::here("data", "demographics", "processed", "covariates_mortality_G_H_tidy.rds"))
 wt_file = readr::read_csv(here::here("data", "accelerometry", "inclusion_summary.csv.gz"),
                           col_types = cols(SEQN = col_character(),
@@ -14,7 +17,8 @@ day_key = wt_file %>%
 covariates =
   covariates %>%
   left_join(pa_df, by = "SEQN") %>%
-  select(-num_valid_days) %>%
+  left_join(cadence_df, by = "SEQN") %>%
+  # select(-num_valid_days) %>%
   left_join(day_key, by = "SEQN") %>%
   mutate(has_accel = SEQN %in% wt_file$SEQN,
          valid_accel = case_when(is.na(num_valid_days) ~ FALSE,
@@ -26,7 +30,7 @@ covariates =
            num_valid_days < 3 ~ "< 3 valid days",
            TRUE ~ "Didn't receive device"
          )),
-         across(c(contains("scrf"), contains("adept")), ~if_else(is.na(.x) & valid_accel, 0, .x)),
+         across(c(contains("scrf") | contains("adept") & !contains("cadence")), ~if_else(is.na(.x) & valid_accel, 0, .x)),
          cat_education =
            factor(case_when(
              education_level_adults_20 == "High school graduate/GED or equi" ~ "HS/HS equivalent",
