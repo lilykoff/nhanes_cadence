@@ -1,6 +1,6 @@
 library(tidyverse)
 
-covariates_accel_mortality_df <- readRDS("~/Documents/nhanes_steps_mortality/data/covariates_accel_mortality_df.rds")
+covariates_accel_mortality_df <- read_rds(here::here("data", "covariates_accel_mortality_df.rds"))
 subject_info = covariates_accel_mortality_df %>% select(SEQN, data_release_cycle, gender,
                                                         age_in_years_at_screening, full_sample_2_year_interview_weight,
                                                         full_sample_2_year_mec_exam_weight,
